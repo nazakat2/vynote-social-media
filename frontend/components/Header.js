@@ -88,16 +88,24 @@ export default function Header({ dark, setDark, onSearch, search, onOpenCreate, 
   };
 
   const loadChats = async () => {
-    const [conversationResult, followerResult] = await Promise.all([
+    const [conversationResult, followerResult, followingResult] = await Promise.all([
       messagesApi.getConversations(),
-      followsApi.getFollowers(me?.id, { limit: 50 })
+      followsApi.getFollowers(me?.id, { limit: 50 }),
+      followsApi.getFollowing(me?.id, { limit: 50 })
     ]);
     const conversations = conversationResult.data || [];
     const knownIds = new Set(conversations.map((chat) => chat.profiles?.id));
-    const followerContacts = (followerResult.data || [])
-      .filter((profile) => profile?.id && !knownIds.has(profile.id))
-      .map((profile) => ({ conversation_id: null, profiles: profile, is_follower: true }));
-    setChats([...conversations, ...followerContacts]);
+    const contacts = [];
+    const addContacts = (profiles, relationship) => {
+      (profiles || []).forEach((profile) => {
+        if (!profile?.id || knownIds.has(profile.id)) return;
+        knownIds.add(profile.id);
+        contacts.push({ conversation_id: null, profiles: profile, relationship });
+      });
+    };
+    addContacts(followingResult.data, 'following');
+    addContacts(followerResult.data, 'follower');
+    setChats([...conversations, ...contacts]);
   };
 
   const handleSearch = (v) => { setQuery(v); onSearch(v); };
@@ -251,11 +259,11 @@ export default function Header({ dark, setDark, onSearch, search, onOpenCreate, 
                     <button onClick={() => setMsgOpen(false)} aria-label="Close messages" title="Close" style={{ width: 32, height: 32, borderRadius: '50%', border: 0, background: 'var(--chip, #f2f2f4)', color: 'var(--ink, #222)', cursor: 'pointer', fontSize: 18, display: 'grid', placeItems: 'center' }}>×</button>
                   </div>
                   {chats.map((c) => (
-                    <div key={c.conversation_id} onClick={() => openChat(c)} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 16px', cursor: 'pointer' }}>
+                    <div key={c.conversation_id || `contact-${c.profiles?.id}`} onClick={() => openChat(c)} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 16px', cursor: 'pointer' }}>
                       <img src={c.profiles?.avatar_url || '/images/default-avatar.png'} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <b style={{ fontSize: 13.5, display: 'block', color: 'var(--ink, #222)' }}>{c.profiles?.display_name}</b>
-                        <span style={{ fontSize: 12.5, color: 'var(--sub, #888)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{c.is_follower ? 'Follows you · Start a chat' : 'Open conversation'}</span>
+                        <span style={{ fontSize: 12.5, color: 'var(--sub, #888)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{c.relationship === 'following' ? 'You follow them · Start a chat' : c.relationship === 'follower' ? 'Follows you · Start a chat' : 'Open conversation'}</span>
                       </div>
                     </div>
                   ))}
