@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { authRedirectUrl } from './siteUrl'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -49,7 +50,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`
+      redirectTo: authRedirectUrl('/auth/callback')
     }
   })
   return { data, error }
@@ -64,7 +65,7 @@ export async function signOut() {
 // Helper to reset password
 export async function resetPassword(email) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/reset-password`
+    redirectTo: authRedirectUrl('/auth/reset-password')
   })
   return { data, error }
 }

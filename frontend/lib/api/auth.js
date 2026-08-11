@@ -1,4 +1,5 @@
 import { supabase } from '../supabase'
+import { authRedirectUrl } from '../siteUrl'
 
 export const auth = {
   signUp: async (email, password, username) => {
@@ -18,7 +19,7 @@ export const auth = {
   signInWithGoogle: async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
+      options: { redirectTo: authRedirectUrl('/auth/callback') }
     })
     return { data, error }
   },
@@ -30,7 +31,7 @@ export const auth = {
 
   resetPassword: async (email) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`
+      redirectTo: authRedirectUrl('/auth/reset-password')
     })
     return { data, error }
   },

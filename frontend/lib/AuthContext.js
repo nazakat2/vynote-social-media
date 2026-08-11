@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import { initializeFirebaseAnalytics } from './firebase'
+import { authRedirectUrl } from './siteUrl'
 
 const AuthContext = createContext(null)
 
@@ -103,7 +104,7 @@ export function AuthProvider({ children }) {
   async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
+      options: { redirectTo: authRedirectUrl('/auth/callback') }
     })
     return { data, error }
   }
