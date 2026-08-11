@@ -36,7 +36,13 @@ export function AuthProvider({ children }) {
             if (error) throw error
           }
 
-          window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
+          // Preserve Next.js' internal history state while removing OAuth tokens.
+          // Replacing it with an empty object breaks the App Router.
+          window.history.replaceState(
+            window.history.state,
+            document.title,
+            window.location.pathname + window.location.search
+          )
         }
 
         const { data: { session }, error } = await supabase.auth.getSession()
