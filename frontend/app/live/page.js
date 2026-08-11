@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/AuthContext';
 import { getActiveStreams, getFollowingLiveStreams } from '../../lib/live/liveService';
 import { supabase } from '../../lib/supabase';
 import LiveGrid from '../../components/live/LiveGrid';
+import GoLiveModal from '../../components/live/GoLiveModal';
 
 export default function LivePage() {
   const { user, profile } = useAuth();
@@ -14,6 +15,7 @@ export default function LivePage() {
   const [followingStreams, setFollowingStreams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [follows, setFollows] = useState({});
+  const [showGoLive, setShowGoLive] = useState(false);
 
   useEffect(() => {
     loadStreams();
@@ -73,7 +75,7 @@ export default function LivePage() {
 
   const handleGoLive = () => {
     if (!user) { router.push('/auth/login'); return; }
-    window.dispatchEvent(new CustomEvent('openGoLive'));
+    setShowGoLive(true);
   };
 
   return (
@@ -117,6 +119,10 @@ export default function LivePage() {
           </>
         )}
       </div>
+
+      {showGoLive && (
+        <GoLiveModal onClose={() => setShowGoLive(false)} />
+      )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
