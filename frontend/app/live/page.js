@@ -7,6 +7,7 @@ import { getActiveStreams, getFollowingLiveStreams } from '../../lib/live/liveSe
 import { supabase } from '../../lib/supabase';
 import LiveGrid from '../../components/live/LiveGrid';
 import GoLiveModal from '../../components/live/GoLiveModal';
+import Sidebar from '../../components/Sidebar';
 
 export default function LivePage() {
   const { user, profile } = useAuth();
@@ -80,6 +81,12 @@ export default function LivePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg, #fafafa)', paddingBottom: 40 }}>
+      <Sidebar
+        onExplore={() => router.push('/')}
+        onPost={() => user ? router.push('/?create=1') : router.push('/auth/login')}
+        onNotifications={() => user ? router.push('/?notifications=1') : router.push('/auth/login')}
+        onLive={() => router.push('/live')}
+      />
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '30px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 30 }}>
           <div>

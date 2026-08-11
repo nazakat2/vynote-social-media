@@ -8,6 +8,7 @@ import { getStreamById, joinStreamAsViewer, leaveStreamAsViewer, sendChatMessage
 import { formatViewerCount, formatDuration, REACTION_TYPES } from '../../../lib/live/liveUtils';
 import LivePlayer from '../../../components/live/LivePlayer';
 import LiveChat from '../../../components/live/LiveChat';
+import Sidebar from '../../../components/Sidebar';
 import { useLivePresence } from '../../../hooks/useLivePresence';
 
 export default function StreamViewerPage() {
@@ -139,6 +140,12 @@ export default function StreamViewerPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg, #fafafa)', paddingBottom: 20 }}>
+      <Sidebar
+        onExplore={() => router.push('/')}
+        onPost={() => user ? router.push('/?create=1') : router.push('/auth/login')}
+        onNotifications={() => user ? router.push('/?notifications=1') : router.push('/auth/login')}
+        onLive={() => router.push('/live')}
+      />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 16px' }}>
         <button onClick={() => router.push('/live')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 0', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sub, #888)', fontSize: 14, marginBottom: 16 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M15 18l-6-6 6-6" /></svg>
