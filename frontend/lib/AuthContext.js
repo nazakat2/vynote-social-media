@@ -12,18 +12,51 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let mounted = true
+
     initializeFirebaseAnalytics().catch((error) => {
       console.warn('Firebase Analytics initialization failed:', error)
     })
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setLoading(false)
+    async function initializeAuth() {
+      try {
+        // Supabase can return OAuth credentials in the URL hash (implicit flow).
+        // Explicitly persist them so login also works when the provider falls
+        // back to the site root instead of /auth/callback.
+        if (window.location.hash.includes('access_token=')) {
+          const params = new URLSearchParams(window.location.hash.slice(1))
+          const accessToken = params.get('access_token')
+          const refreshToken = params.get('refresh_token')
+
+          if (accessToken && refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            })
+            if (error) throw error
+          }
+
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
+        }
+
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) throw error
+        if (!mounted) return
+
+        setUser(session?.user ?? null)
+        if (session?.user) await fetchProfile(session.user.id)
+      } catch (error) {
+        console.error('Authentication initialization failed:', error)
+        if (mounted) {
+          setUser(null)
+          setProfile(null)
+        }
+      } finally {
+        if (mounted) setLoading(false)
       }
-    })
+    }
+
+    initializeAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
@@ -35,14 +68,16 @@ export function AuthProvider({ children }) {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function fetchProfile(userId) {
     const { data } = await supabase
       .from('profiles').select('*').eq('id', userId).maybeSingle()
     setProfile(data)
-    setLoading(false)
   }
 
   async function signUp(email, password, username) {
