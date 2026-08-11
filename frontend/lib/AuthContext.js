@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import { initializeFirebaseAnalytics } from './firebase'
-import { authRedirectUrl } from './siteUrl'
+import { authRedirectUrl, SITE_URL } from './siteUrl'
 
 const AuthContext = createContext(null)
 
@@ -35,15 +35,13 @@ export function AuthProvider({ children }) {
               refresh_token: refreshToken
             })
             if (error) throw error
-          }
 
-          // Preserve Next.js' internal history state while removing OAuth tokens.
-          // Replacing it with an empty object breaks the App Router.
-          window.history.replaceState(
-            window.history.state,
-            document.title,
-            window.location.pathname + window.location.search
-          )
+            // Finish OAuth on the canonical production site. This also removes
+            // sensitive tokens from the address bar without mutating Next.js'
+            // internal history state.
+            window.location.replace(SITE_URL)
+            return
+          }
         }
 
         const { data: { session }, error } = await supabase.auth.getSession()
